@@ -1,0 +1,59 @@
+name: Auto-merge on approval
+
+# When a code owner submits an approving review, merge the PR automatically.
+# The protect-main ruleset stays the gatekeeper: the merge API refuses any PR
+# that still lacks a code-owner approval or green gate/validate checks, so this
+# workflow cannot merge anything a human could not merge by hand.
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    if: github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge if requirements are met
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const owner = context.repo.owner, repo = context.repo.repo;
+            const number = context.payload.pull_request.number;
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: number });
+            if (pr.state !== 'open' || pr.draft) {
+              core.info(`PR #${number} is ${pr.draft ? 'a draft' : pr.state}; nothing to do.`);
+              return;
+            }
+            try {
+              await github.rest.pulls.merge({ owner, repo, pull_number: number, merge_method: 'merge' });
+              core.info(`Merged PR #${number}.`);
+              return;
+            } catch (e) {
+              // 405: requirements not yet satisfied (checks still running) or conflicts.
+              core.info(`Direct merge refused (${e.status}): ${e.message}`);
+            }
+            // Checks may still be running at approval time: hand off to GitHub's
+            // native auto-merge so it lands the moment the ruleset is satisfied.
+            try {
+              const { repository } = await github.graphql(
+                `query($owner:String!,$repo:String!,$number:Int!){
+                   repository(owner:$owner,name:$repo){ pullRequest(number:$number){ id } } }`,
+                { owner, repo, number });
+              await github.graphql(
+                `mutation($id:ID!){ enablePullRequestAutoMerge(input:{pullRequestId:$id,mergeMethod:MERGE}){ clientMutationId } }`,
+                { id: repository.pullRequest.id });
+              core.info(`Auto-merge enabled on PR #${number}; it will merge when checks pass.`);
+            } catch (e) {
+              // Usually a conflicted branch: a human has to update or resolve it.
+              await github.rest.issues.createComment({ owner, repo, issue_number: number,
+                body: 'Approved, but automatic merge could not proceed (' + e.message + '). Update the branch or resolve conflicts, then re-approve.' });
+              core.setFailed(`Could not merge or enable auto-merge on PR #${number}: ${e.message}`);
+            }
