@@ -31,3 +31,6 @@ jmnhicbkdlfeaimeidnpbbmgbgfobpel // ThreatDown Browser Phishing Protection (Edge
 iokapgenfjiafbmphhhcgmgkobiiomcp // G DATA WebProtection
 klicnoclcmhafeeepkpdedpojjlaaflf // CrowdStrike Falcon Browser Extension
 emglnaklbigobcipgljkhlhffnhgfeme //Lightspeed Identity
+egnmgclkeiioginamdjpnglaooajmcjm // Lightspeed Filter Helper
+oabgjilkcpjhblbghejemfighgjhecjl // Lightspeed Classroom
+ehnniokiiebpinnfegpkdlcamgdcaaje // Lightspeed Filter
