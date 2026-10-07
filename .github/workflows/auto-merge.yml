@@ -1,28 +1,46 @@
 name: Auto-merge on approval
 
+# A code owner's approval is the only human step. The PR is landed on main by
+# .github/scripts/land_pr.js without updating the PR branch, so submissions that
+# all append to the same category file never conflict with each other.
+#
 # workflow_run provides write permissions for fork PRs. Never check out or run
-# pull request code in this privileged workflow.
+# pull request code in this privileged workflow: the PR head is only fetched as
+# objects, and the only code executed is main's own scripts.
 on:
   workflow_run:
     workflows: ["Auto-merge approval signal"]
     types: [completed]
+  # Manual run for a PR that was approved while the gate was red, or to dry-run
+  # the landing logic without pushing.
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number
+        required: true
+      dry_run:
+        description: Build and verify the merge commit but do not push it
+        type: boolean
+        default: false
 
 permissions:
   actions: read
+  checks: read
   contents: write
   pull-requests: write
   issues: write
 
 concurrency:
-  group: auto-merge-${{ github.event.workflow_run.id }}
+  group: auto-merge-${{ github.event.workflow_run.id || github.run_id }}
   cancel-in-progress: false
 
 jobs:
   merge:
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Download PR number
+        if: github.event_name == 'workflow_run'
         uses: actions/download-artifact@v4.3.0
         with:
           name: pr-number
@@ -30,48 +48,39 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Merge if requirements are met
+      # Push via the write deploy key: the main ruleset grants bypass to deploy
+      # keys, not to the workflow token (same as refresh.yml). Checks out main
+      # only, never the PR.
+      - name: Checkout main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          ssh-key: ${{ secrets.EXTENSIONS_REFRESH_DEPLOY_KEY }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Land or merge the approved pull request
         uses: actions/github-script@v8
+        env:
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
         with:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const owner = context.repo.owner, repo = context.repo.repo;
-            const number = Number(fs.readFileSync(path.join(process.env.RUNNER_TEMP, 'pr-number', 'pr-number'), 'utf8').trim());
+            const land = require(path.join(process.env.GITHUB_WORKSPACE, '.github/scripts/land_pr.js'));
+            const number = context.eventName === 'workflow_dispatch'
+              ? Number(context.payload.inputs.pr_number)
+              : Number(fs.readFileSync(path.join(process.env.RUNNER_TEMP, 'pr-number', 'pr-number'), 'utf8').trim());
             if (!Number.isSafeInteger(number) || number < 1) {
               throw new Error(`Invalid pull request number: ${number}`);
             }
-            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: number });
-            if (pr.state !== 'open' || pr.draft) {
-              core.info(`PR #${number} is ${pr.draft ? 'a draft' : pr.state}; nothing to do.`);
-              return;
-            }
-            try {
-              await github.rest.pulls.merge({ owner, repo, pull_number: number, merge_method: 'merge' });
-              core.info(`Merged PR #${number}.`);
-              return;
-            } catch (e) {
-              // 405: requirements not yet satisfied (checks still running) or conflicts.
-              core.info(`Direct merge refused (${e.status}): ${e.message}`);
-            }
-            // Checks may still be running at approval time: hand off to GitHub's
-            // native auto-merge so it lands the moment the ruleset is satisfied.
-            try {
-              const { repository } = await github.graphql(
-                `query($owner:String!,$repo:String!,$number:Int!){
-                   repository(owner:$owner,name:$repo){ pullRequest(number:$number){ id } } }`,
-                { owner, repo, number });
-              await github.graphql(
-                `mutation($id:ID!){ enablePullRequestAutoMerge(input:{pullRequestId:$id,mergeMethod:MERGE}){ clientMutationId } }`,
-                { id: repository.pullRequest.id });
-              core.info(`Auto-merge enabled on PR #${number}; it will merge when checks pass.`);
-            } catch (e) {
-              // Usually a conflicted branch: a human has to update or resolve it.
-              try {
-                await github.rest.issues.createComment({ owner, repo, issue_number: number,
-                  body: 'Approved, but automatic merge could not proceed (' + e.message + '). Update the branch or resolve conflicts, then re-approve.' });
-              } catch (commentError) {
-                core.warning(`Could not post merge failure comment: ${commentError.message}`);
-              }
-              core.setFailed(`Could not merge or enable auto-merge on PR #${number}: ${e.message}`);
-            }
+            const outcome = await land.run({
+              github, context, core, prNumber: number,
+              dryRun: process.env.DRY_RUN === 'true',
+              cwd: process.env.GITHUB_WORKSPACE,
+            });
+            core.info('Outcome: ' + (typeof outcome === 'string' ? outcome : outcome.status));

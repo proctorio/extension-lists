@@ -202,7 +202,22 @@ jobs:
 
             if (pass) {
               if (reviewers.length) {
-                await withRetry(() => github.rest.pulls.requestReviewers({ owner, repo, pull_number: pr.number, reviewers }));
+                try {
+                  await github.rest.pulls.requestReviewers({ owner, repo, pull_number: pr.number, reviewers });
+                } catch (e) {
+                  if (e.status !== 422) throw e;
+                  // GitHub rejects the whole request if any handle is not a collaborator (for
+                  // example a new code owner who has not accepted the invitation yet). Request
+                  // them one by one so one pending invite cannot fail the gate for every PR.
+                  for (const reviewer of reviewers) {
+                    try {
+                      await github.rest.pulls.requestReviewers({ owner, repo, pull_number: pr.number, reviewers: [reviewer] });
+                    } catch (e2) {
+                      if (e2.status !== 422) throw e2;
+                      core.warning('Cannot request review from @' + reviewer + ' (not a collaborator yet): ' + e2.message);
+                    }
+                  }
+                }
               }
             } else {
               const pending = (pr.requested_reviewers || []).map(u => u.login);
