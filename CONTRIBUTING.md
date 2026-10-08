@@ -39,6 +39,14 @@ An extension will be rejected if it can:
 - remote-control the browser or mask the user's activity
 - route, tunnel, or disguise network traffic. Consumer VPNs, proxies, and IP or location spoofers are not accepted. Corporate filtering and security agents deployed through an institution's MDM (for example Netskope, iboss, Smoothwall) are fine.
 
+## Rejected vendors
+
+Pull requests adding any extension from the following vendors will be closed without further review, regardless of the specific extension ID submitted:
+
+- **Honorlock** (Honorlock, Inc.)
+  - Sends students' exam images to Amazon without their consent, breaching the privacy they were promised. See [NYT, May 27, 2022](https://www.nytimes.com/2022/05/27/technology/college-students-cheating-software-honorlock.html).
+  - Removed students' right to opt out of binding arbitration. The September 2022 Terms of Use let a student opt out within 30 days (§13(g)); the August 2023 revision deleted that clause, so taking a Honorlock-proctored exam binds the student to confidential arbitration with no class action and no jury trial, and the only way to decline is not to take the exam. Compare the [Sept. 2022 Terms of Use](https://honorlock.com/wp-content/uploads/2024/01/Honorlock-Exam-Taker-Terms-of-Use-013024.pdf) ([archived](https://web.archive.org/web/20261002140618/https://honorlock.com/wp-content/uploads/2024/01/Honorlock-Exam-Taker-Terms-of-Use-013024.pdf)) §13(g) to the [Aug. 2023 Terms of Use](https://honorlock.com/wp-content/uploads/2024/09/Honorlock-Test-Taker-Terms-of-Use-0825233.pdf) ([archived](https://web.archive.org/web/20260820194454/https://honorlock.com/wp-content/uploads/2024/09/Honorlock-Test-Taker-Terms-of-Use-0825233.pdf)) §13.
+
 ## What reviewers check
 
 Reviewers verify the ID, not the description. The description in your pull request is a label, not proof. A reviewer opens the store listing for the exact ID you submitted and confirms the publisher, name, and permissions match your claim. Submitting an ID that belongs to a different product than described will get the pull request closed and the submitter blocked.

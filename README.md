@@ -34,7 +34,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for acceptance criteria and the full chec
 
 ## What gets rejected
 
-Extensions that can enable communication between people, look up or generate answers, capture exam content, inject remotely controlled scripts, or route traffic through consumer VPNs, proxies, or location spoofers. Corporate security agents deployed through an institution's MDM are acceptable. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Extensions that can enable communication between people, look up or generate answers, capture exam content, inject remotely controlled scripts, or route traffic through consumer VPNs, proxies, or location spoofers. Corporate security agents deployed through an institution's MDM are acceptable. Some vendors (e.g. Honorlock) are rejected outright regardless of extension ID. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Validation
 

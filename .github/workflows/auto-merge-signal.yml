@@ -1,0 +1,25 @@
+name: Auto-merge approval signal
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: read
+
+jobs:
+  signal:
+    if: github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Save PR number
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: echo "$PR_NUMBER" > "$RUNNER_TEMP/pr-number"
+
+      - name: Upload PR number
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: pr-number
+          path: ${{ runner.temp }}/pr-number
+          if-no-files-found: error
