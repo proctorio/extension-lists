@@ -3,6 +3,7 @@ abmmkhcfmfmkgeeopaedjcnckmchannj // NetRef: Classroom Management
 hdlpalnjkjcnfbhjnncdemhifdoallnf // iboss Classroom Management
 kmffehbidlalibfeklaefnckpidbodff // iboss cloud Enterprise
 nopfnnpnopgmcnkjchnlpomggcdjfepo // Clever
+dikiaagfielfbnbbopidjjagldjopbpa // Clever Plus
 adkcpkpghahmbopkjchobieckeoaoeem // Lightspeed Filter Agent
 hpkdokakjglppeekfeekmebfahadnflp // Lightspeed Alert Agent
 jjekifdonckeadelohpncncelhpjcgmj // GoGuardian extension
@@ -50,3 +51,10 @@ objafjdlhkpglojmhplfeijpojcepoah // Assessment Lock (Vretta)
 njcfmnkbphihcdnolnkadgbcjpnffbng // Chrome Auditing for Education
 lmhjmfajbailnhbhnmgoknfgfidbeibm // GoGuardian License
 ckecmkbnoanpgplccmnoikfmpcdladkc // Securly for Chromebooks
+fcclfaoepaibnkmpcnknicjhpnbbbnom // Blocksi Enterprise Edition Windows
+nkkighcdodpjcdenompholalclpaobff // MasteryConnect LockDown Browser
+fogjeanjfbiombghnmkmmophfeccjdki // LockDown Browser
+egbobbmkefefhmoddnnpfgomegoccgoe // Eduphoria LockDown Browser
+pedddlceekglhelpihoglbopdeojdajj // Pearson MyLab LockDownBrowser
+djpknfecbncogekjnjppojlaipeobkmo // LockDown Browser: AP Classroom Edition
+johiffgefcnfiddcakohlcpebgpidnji // Student Keeper

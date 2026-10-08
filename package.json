@@ -6,7 +6,8 @@
   "scripts": {
     "refresh-list": "node .github/scripts/refresh_list.js",
     "validate": "node .github/scripts/refresh_list.js --lint",
-    "check": "node .github/scripts/refresh_list.js --check"
+    "check": "node .github/scripts/refresh_list.js --check",
+    "test": "node --test .github/scripts/land_pr.test.js"
   },
   "engines": {
     "node": ">=18"
